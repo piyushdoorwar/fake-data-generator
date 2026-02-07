@@ -193,6 +193,14 @@ function addFieldRow(field = {}, { focusNew = true } = {}) {
   const typeLabel = getTypeLabel(typeValue);
 
   row.innerHTML = `
+    <button class="drag-handle" type="button" draggable="true" aria-label="Drag to reorder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M7 20V6"></path>
+        <path d="M4 9l3-3 3 3"></path>
+        <path d="M17 4v14"></path>
+        <path d="M14 14l3 3 3-3"></path>
+      </svg>
+    </button>
     <button class="remove-btn" data-action="remove" aria-label="Remove field">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="6" y1="6" x2="18" y2="18"/>
@@ -280,6 +288,8 @@ function addFieldRow(field = {}, { focusNew = true } = {}) {
     });
   }
 
+  setupDragAndDrop(row);
+
   updateRowValidation(row);
   updateEmptyState();
   updateStats();
@@ -292,6 +302,38 @@ function addFieldRow(field = {}, { focusNew = true } = {}) {
       nameInput.focus();
     }
   }
+}
+
+let draggedRow = null;
+
+function setupDragAndDrop(row) {
+  const handle = row.querySelector(".drag-handle");
+  if (!handle) return;
+
+  handle.addEventListener("dragstart", (event) => {
+    draggedRow = row;
+    row.classList.add("is-dragging");
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", "drag");
+  });
+
+  handle.addEventListener("dragend", () => {
+    if (draggedRow) draggedRow.classList.remove("is-dragging");
+    draggedRow = null;
+    scheduleGenerate();
+  });
+}
+
+function getDragAfterElement(container, y) {
+  const items = [...container.querySelectorAll(".field-row:not(.is-dragging)")];
+  return items.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) {
+      return { offset, element: child };
+    }
+    return closest;
+  }, { offset: Number.NEGATIVE_INFINITY, element: null }).element;
 }
 
 function closeAllTypeMenus(exceptRow = null) {
@@ -928,3 +970,20 @@ function init() {
 }
 
 init();
+
+if (fieldList) {
+  fieldList.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    if (!draggedRow) return;
+    const after = getDragAfterElement(fieldList, event.clientY);
+    if (after == null) {
+      fieldList.appendChild(draggedRow);
+    } else {
+      fieldList.insertBefore(draggedRow, after);
+    }
+  });
+
+  fieldList.addEventListener("drop", (event) => {
+    event.preventDefault();
+  });
+}

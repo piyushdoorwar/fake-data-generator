@@ -1150,6 +1150,22 @@ body::before {
     margin-top: 0.5rem;
 }
 
+.tip-list {
+    margin: 0.5rem 0 0;
+    padding-left: 1.25rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.6;
+}
+
+.tip-list li {
+    margin-bottom: 0.35rem;
+}
+
+.tip-list li:last-child {
+    margin-bottom: 0;
+}
+
 .legend-grid {
     display: grid;
     gap: 0.75rem;
@@ -1507,12 +1523,49 @@ body::before {
     grid-template-columns: minmax(160px, 1.3fr) minmax(140px, 1fr) minmax(180px, 1.2fr);
     gap: 0.75rem;
     padding: 0.85rem;
+    padding-left: 2.4rem;
     border-radius: 16px;
     background: rgba(0, 0, 0, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.08);
     align-items: end;
     position: relative;
     min-width: 0;
+}
+
+.field-row.is-dragging {
+    opacity: 0.6;
+}
+
+.drag-handle {
+    position: absolute;
+    left: 0.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.4);
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    transition: all 0.2s ease;
+}
+
+.drag-handle:hover {
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+.drag-handle svg {
+    width: 14px;
+    height: 14px;
 }
 
 .field-row.is-invalid {
