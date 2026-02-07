@@ -2,7 +2,6 @@
 
 const fieldList = document.getElementById("field-list");
 const emptyState = document.getElementById("empty-state");
-const addFieldBtn = document.getElementById("add-field-btn");
 const recordCountInput = document.getElementById("record-count");
 const structureToggle = document.getElementById("structure-toggle");
 const structureHint = document.getElementById("structure-hint");
@@ -812,24 +811,13 @@ document.querySelectorAll(".action-btn[data-action]").forEach((btn) => {
   });
 });
 
-if (addFieldBtn) {
-  addFieldBtn.addEventListener("click", () => addFieldRow());
-}
-
 if (recordCountInput) {
   recordCountInput.addEventListener("input", () => {
+    getRecordCount();
     updateStats();
     scheduleGenerate();
   });
 }
-
-document.querySelectorAll(".chip[data-count]").forEach((chip) => {
-  chip.addEventListener("click", () => {
-    recordCountInput.value = chip.dataset.count;
-    updateStats();
-    scheduleGenerate();
-  });
-});
 
 if (structureToggle) {
   structureToggle.querySelectorAll(".toggle-btn").forEach((btn) => {

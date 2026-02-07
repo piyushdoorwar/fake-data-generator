@@ -261,6 +261,7 @@ body::before {
     margin: 0;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    white-space: nowrap;
 }
 
 /* Action Bar */
@@ -275,6 +276,8 @@ body::before {
     box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
     backdrop-filter: blur(10px);
     overflow: visible;
+    flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .action-btn {
@@ -518,6 +521,35 @@ body::before {
     background-color: var(--bg-secondary);
 }
 
+/* Scrollbar styling for field list (match editor style) */
+.field-list::-webkit-scrollbar {
+    width: 14px;
+    height: 14px;
+}
+
+.field-list::-webkit-scrollbar-track {
+    background-color: var(--bg-secondary);
+}
+
+.field-list::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--accent-purple), var(--accent-purple-light));
+    border-radius: 10px;
+    border: 3px solid var(--bg-secondary);
+}
+
+.field-list::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, var(--accent-purple-light), var(--accent-yellow));
+}
+
+.field-list::-webkit-scrollbar-corner {
+    background-color: var(--bg-secondary);
+}
+
+.field-list {
+    scrollbar-color: var(--accent-purple) var(--bg-secondary);
+    scrollbar-width: auto;
+}
+
 /* Sync scrolling for line numbers */
 .code-editor-wrapper:hover .line-numbers {
     color: var(--text-muted);
@@ -647,6 +679,11 @@ body::before {
     .action-bar {
         gap: 0.25rem;
         flex-wrap: wrap;
+    }
+
+    .record-control {
+        width: 100%;
+        justify-content: flex-start;
     }
     
     .action-btn {
@@ -1229,8 +1266,12 @@ body::before {
 
 .schema-body {
     gap: 1rem;
-    overflow: auto;
+    overflow: hidden;
     padding-right: 1.1rem;
+}
+
+.editor-panel.right-panel .panel-body {
+    overflow: auto;
 }
 
 .schema-toolbar {
@@ -1325,6 +1366,32 @@ body::before {
     transform: translateY(-1px);
 }
 
+.record-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.15rem 0.5rem;
+}
+
+.record-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.record-input {
+    width: 90px;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.75rem;
+}
+
+.record-chips .chip {
+    padding: 0.3rem 0.6rem;
+}
+
 .switch-row {
     display: flex;
     align-items: center;
@@ -1387,6 +1454,9 @@ body::before {
     display: flex;
     flex-direction: column;
     gap: 0.85rem;
+    flex: 1;
+    overflow: auto;
+    padding-right: 0.4rem;
 }
 
 .field-row {
@@ -1430,6 +1500,17 @@ body::before {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.82rem;
     transition: all 0.2s ease;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
 }
 
 .field-input:focus,
