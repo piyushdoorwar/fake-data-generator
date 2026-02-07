@@ -1,0 +1,33 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#FFD700" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#8B5CF6" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="100" height="100" rx="20" fill="#0d0d0d"/>
+  <circle cx="50" cy="36" r="32" fill="url(#glow)" opacity="0.35">
+    <animate attributeName="opacity" values="0.15;0.35;0.15" dur="3.2s" repeatCount="indefinite"/>
+  </circle>
+
+  <g id="db" stroke="url(#g)" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="50" cy="34" rx="22" ry="8"/>
+    <path d="M28 34v22c0 4 9.9 8 22 8s22-4 22-8V34"/>
+    <ellipse cx="50" cy="56" rx="22" ry="8" opacity="0.5"/>
+    <animateTransform attributeName="transform" type="translate" values="0 0;0 -1;0 0" dur="2.6s" repeatCount="indefinite"/>
+  </g>
+
+  <g fill="#FFD700">
+    <path id="spark1" d="M72 22l2.2 4.2 4.3 1.1-4 2.5.6 4.4-3.1-2.8-4 2 1.5-4-3.2-3.1 4.4-.6z"/>
+    <animateTransform href="#spark1" attributeName="transform" type="rotate" values="0 72 22;360 72 22" dur="2.8s" repeatCount="indefinite"/>
+  </g>
+  <g fill="#8B5CF6">
+    <path id="spark2" d="M22 58l1.6 3.1 3.3.8-3 1.9.5 3.3-2.4-2.1-3 1.5 1.1-3-2.4-2.3 3.3-.4z"/>
+    <animateTransform href="#spark2" attributeName="transform" type="rotate" values="0 22 58;-360 22 58" dur="3.4s" repeatCount="indefinite"/>
+  </g>
+</svg>
