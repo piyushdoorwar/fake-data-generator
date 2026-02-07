@@ -161,60 +161,96 @@ function showToast(message, type = "info") {
   }, 2800);
 }
 
-function buildTypeOptions(selectedValue) {
+function getTypeLabel(value) {
+  for (const group of TYPE_GROUPS) {
+    const match = group.types.find((type) => type.value === value);
+    if (match) return match.label;
+  }
+  return value;
+}
+
+function buildTypeMenu(selectedValue) {
   return TYPE_GROUPS.map(group => {
     const options = group.types.map(type => {
-      const selected = type.value === selectedValue ? "selected" : "";
-      return `<option value="${type.value}" ${selected}>${type.label}</option>`;
+      const active = type.value === selectedValue ? "active" : "";
+      return `<button type="button" class="type-option ${active}" data-value="${type.value}">${type.label}</button>`;
     }).join("");
-    return `<optgroup label="${group.label}">${options}</optgroup>`;
+    return `
+      <div class="type-group">
+        <div class="type-group-label">${group.label}</div>
+        ${options}
+      </div>
+    `;
   }).join("");
 }
 
-function addFieldRow(field = {}) {
+function addFieldRow(field = {}, { focusNew = true } = {}) {
   const row = document.createElement("div");
   row.className = "field-row";
 
   const nameValue = field.name ? escapeAttr(field.name) : "";
   const typeValue = field.type || "full_name";
+  const typeLabel = getTypeLabel(typeValue);
 
   row.innerHTML = `
+    <button class="remove-btn" data-action="remove" aria-label="Remove field">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="6" y1="6" x2="18" y2="18"/>
+        <line x1="6" y1="18" x2="18" y2="6"/>
+      </svg>
+    </button>
     <div class="field-cell">
       <label class="field-label">Field</label>
       <input class="field-input field-name-input" type="text" placeholder="e.g. user.email" value="${nameValue}">
     </div>
     <div class="field-cell">
       <label class="field-label">Type</label>
-      <select class="field-select field-type-select">
-        ${buildTypeOptions(typeValue)}
-      </select>
+      <div class="type-select" data-open="false">
+        <button type="button" class="type-select-trigger">
+          <span class="type-select-text">${typeLabel}</span>
+          <span class="type-select-icon">▾</span>
+        </button>
+        <div class="type-select-menu" role="listbox">
+          ${buildTypeMenu(typeValue)}
+        </div>
+        <input type="hidden" class="field-type-select" value="${typeValue}">
+      </div>
     </div>
     <div class="field-cell">
       <label class="field-label">Options</label>
       <div class="options-wrap" data-options></div>
-    </div>
-    <div class="field-cell">
-      <label class="field-label">Actions</label>
-      <div class="row-actions">
-        <button class="icon-btn" data-action="duplicate" aria-label="Duplicate field">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="9" y="9" width="13" height="13" rx="2"/>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-          </svg>
-        </button>
-        <button class="icon-btn danger" data-action="remove" aria-label="Remove field">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="5" y1="12" x2="19" y2="12"/>
-          </svg>
-        </button>
-      </div>
     </div>
   `;
 
   fieldList.appendChild(row);
 
   const typeSelect = row.querySelector(".field-type-select");
+  const typeTrigger = row.querySelector(".type-select-trigger");
+  const typeMenu = row.querySelector(".type-select-menu");
   renderOptions(row, typeValue, field.options);
+
+  if (typeTrigger && typeMenu) {
+    typeTrigger.addEventListener("click", (event) => {
+      event.stopPropagation();
+      closeAllTypeMenus(row);
+      const isOpen = row.querySelector(".type-select").dataset.open === "true";
+      row.querySelector(".type-select").dataset.open = isOpen ? "false" : "true";
+    });
+
+    typeMenu.querySelectorAll(".type-option").forEach((optionBtn) => {
+      optionBtn.addEventListener("click", () => {
+        const value = optionBtn.dataset.value;
+        typeSelect.value = value;
+        row.querySelector(".type-select-text").textContent = getTypeLabel(value);
+        typeMenu.querySelectorAll(".type-option").forEach((btn) => btn.classList.remove("active"));
+        optionBtn.classList.add("active");
+        row.querySelector(".type-select").dataset.open = "false";
+        renderOptions(row, value);
+        updateRowValidation(row);
+        scheduleGenerate();
+      });
+    });
+  }
 
   row.addEventListener("input", (event) => {
     if (event.target.matches(".field-name-input")) {
@@ -234,29 +270,35 @@ function addFieldRow(field = {}) {
     }
   });
 
-  row.querySelectorAll("[data-action]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const action = btn.dataset.action;
-      if (action === "remove") {
-        row.remove();
-        updateStats();
-        updateEmptyState();
-        scheduleGenerate();
-      }
-      if (action === "duplicate") {
-        const data = getFieldFromRow(row);
-        addFieldRow(data);
-        updateStats();
-        updateEmptyState();
-        scheduleGenerate();
-      }
+  const removeBtn = row.querySelector("[data-action=\"remove\"]");
+  if (removeBtn) {
+    removeBtn.addEventListener("click", () => {
+      row.remove();
+      updateStats();
+      updateEmptyState();
+      scheduleGenerate();
     });
-  });
+  }
 
   updateRowValidation(row);
   updateEmptyState();
   updateStats();
   scheduleGenerate();
+
+  if (focusNew) {
+    row.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    const nameInput = row.querySelector(".field-name-input");
+    if (nameInput) {
+      nameInput.focus();
+    }
+  }
+}
+
+function closeAllTypeMenus(exceptRow = null) {
+  document.querySelectorAll(".type-select").forEach((select) => {
+    if (exceptRow && exceptRow.contains(select)) return;
+    select.dataset.open = "false";
+  });
 }
 
 function renderOptions(row, type, presetOptions = null) {
@@ -784,7 +826,7 @@ function loadSampleSchema() {
     { name: "company", type: "company_name" },
     { name: "created_at", type: "date" }
   ];
-  sample.forEach(addFieldRow);
+  sample.forEach((item) => addFieldRow(item, { focusNew: false }));
   showToast("Sample schema loaded", "success");
 }
 
@@ -846,7 +888,12 @@ if (schemaHelpModal) {
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     if (schemaHelpModal?.classList.contains("is-open")) closeSchemaHelpModal();
+    closeAllTypeMenus();
   }
+});
+
+document.addEventListener("click", () => {
+  closeAllTypeMenus();
 });
 
 function openSchemaHelpModal() {
@@ -872,11 +919,11 @@ if (outputEditor) {
 
 function init() {
   setStructureMode("flat");
-  addFieldRow({ name: "id", type: "uuid" });
-  addFieldRow({ name: "full_name", type: "full_name" });
-  addFieldRow({ name: "email", type: "email" });
-  addFieldRow({ name: "city", type: "city" });
-  addFieldRow({ name: "company", type: "company_name" });
+  addFieldRow({ name: "id", type: "uuid" }, { focusNew: false });
+  addFieldRow({ name: "full_name", type: "full_name" }, { focusNew: false });
+  addFieldRow({ name: "email", type: "email" }, { focusNew: false });
+  addFieldRow({ name: "city", type: "city" }, { focusNew: false });
+  addFieldRow({ name: "company", type: "company_name" }, { focusNew: false });
   generateOutput(true);
 }
 
