@@ -18,6 +18,7 @@ const schemaHelpCloseBtn = document.getElementById("schemaHelpCloseBtn");
 
 let structureMode = "flat";
 let generateTimer = null;
+let lastValidRecordCount = 10;
 
 const TYPE_GROUPS = [
   {
@@ -429,9 +430,14 @@ function scheduleGenerate() {
 }
 
 function getRecordCount() {
-  const raw = Number(recordCountInput.value);
-  const safe = Number.isFinite(raw) ? Math.max(1, Math.min(1000, Math.round(raw))) : 1;
+  const rawValue = recordCountInput.value;
+  if (rawValue === "") {
+    return lastValidRecordCount;
+  }
+  const raw = Number(rawValue);
+  const safe = Number.isFinite(raw) ? Math.max(1, Math.min(100, Math.round(raw))) : lastValidRecordCount;
   recordCountInput.value = String(safe);
+  lastValidRecordCount = safe;
   return safe;
 }
 
@@ -897,6 +903,17 @@ document.querySelectorAll(".action-btn[data-action]").forEach((btn) => {
 
 if (recordCountInput) {
   recordCountInput.addEventListener("input", () => {
+    if (recordCountInput.value !== "") {
+      getRecordCount();
+    }
+    updateStats();
+    scheduleGenerate();
+  });
+
+  recordCountInput.addEventListener("blur", () => {
+    if (recordCountInput.value === "") {
+      recordCountInput.value = String(lastValidRecordCount);
+    }
     getRecordCount();
     updateStats();
     scheduleGenerate();
