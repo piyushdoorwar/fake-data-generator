@@ -11,7 +11,6 @@ const outputHighlights = document.getElementById("output-highlights");
 const outputStatus = document.getElementById("output-status");
 const statFields = document.getElementById("stat-fields");
 const statRecords = document.getElementById("stat-records");
-const toastContainer = document.getElementById("toast-container");
 const schemaHelpModal = document.getElementById("schemaHelpModal");
 const schemaHelpBtn = document.getElementById("schemaHelpBtn");
 const schemaHelpCloseBtn = document.getElementById("schemaHelpCloseBtn");
@@ -138,28 +137,23 @@ const TYPE_DEFAULTS = {
 };
 
 function showToast(message, type = "info") {
-  const toast = document.createElement("div");
-  toast.className = `toast ${type}`;
+  return;
+}
 
-  let icon = "INFO";
-  if (type === "success") icon = "OK";
-  if (type === "error") icon = "ERR";
+function flashActionIcon(button) {
+  if (!button) return;
 
-  toast.innerHTML = `
-    <span class="toast-icon">${icon}</span>
-    <span class="toast-message">${message}</span>
-  `;
+  if (button._actionStateTimeout) {
+    window.clearTimeout(button._actionStateTimeout);
+  }
 
-  toastContainer.appendChild(toast);
-  requestAnimationFrame(() => {
-    toast.classList.add("show");
-  });
-
-  setTimeout(() => {
-    toast.classList.remove("show");
-    toast.classList.add("hide");
-    setTimeout(() => toast.remove(), 300);
-  }, 2800);
+  button.classList.remove("is-activated");
+  void button.offsetWidth;
+  button.classList.add("is-activated");
+  button._actionStateTimeout = window.setTimeout(() => {
+    button.classList.remove("is-activated");
+    button._actionStateTimeout = null;
+  }, 500);
 }
 
 function getTypeLabel(value) {
@@ -809,20 +803,21 @@ function updateOutputStatus(message = null, type = null) {
   }
 }
 
-function copyOutput() {
+function copyOutput(button = null) {
   const value = outputEditor.value.trim();
   if (!value) {
     showToast("Nothing to copy", "error");
     return;
   }
   navigator.clipboard.writeText(value).then(() => {
+    flashActionIcon(button);
     showToast("Copied to clipboard", "success");
   }).catch(() => {
     showToast("Copy failed", "error");
   });
 }
 
-function downloadOutput() {
+function downloadOutput(button = null) {
   const value = outputEditor.value.trim();
   if (!value) {
     showToast("Nothing to download", "error");
@@ -837,23 +832,26 @@ function downloadOutput() {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+  flashActionIcon(button);
   showToast("Download started", "success");
 }
 
-function clearOutput() {
+function clearOutput(button = null) {
   setOutput("");
   updateOutputStatus("Ready", "");
+  flashActionIcon(button);
   showToast("Output cleared", "info");
 }
 
-function clearFields() {
+function clearFields(button = null) {
   fieldList.innerHTML = "";
   updateEmptyState();
   updateStats();
   scheduleGenerate();
+  flashActionIcon(button);
 }
 
-function loadSampleSchema() {
+function loadSampleSchema(button = null) {
   clearFields();
   const sample = structureMode === "nested" ? [
     { name: "user.id", type: "uuid" },
@@ -875,6 +873,7 @@ function loadSampleSchema() {
     { name: "created_at", type: "date" }
   ];
   sample.forEach((item) => addFieldRow(item, { focusNew: false }));
+  flashActionIcon(button);
   showToast("Sample schema loaded", "success");
 }
 
@@ -891,13 +890,19 @@ function escapeAttr(value) {
 document.querySelectorAll(".action-btn[data-action]").forEach((btn) => {
   btn.addEventListener("click", () => {
     const action = btn.dataset.action;
-    if (action === "add-field") addFieldRow();
-    if (action === "load-sample") loadSampleSchema();
-    if (action === "clear-fields") clearFields();
-    if (action === "generate") generateOutput(false);
-    if (action === "copy-output") copyOutput();
-    if (action === "download-output") downloadOutput();
-    if (action === "clear-output") clearOutput();
+    if (action === "add-field") {
+      addFieldRow();
+      flashActionIcon(btn);
+    }
+    if (action === "load-sample") loadSampleSchema(btn);
+    if (action === "clear-fields") clearFields(btn);
+    if (action === "generate") {
+      generateOutput(false);
+      flashActionIcon(btn);
+    }
+    if (action === "copy-output") copyOutput(btn);
+    if (action === "download-output") downloadOutput(btn);
+    if (action === "clear-output") clearOutput(btn);
   });
 });
 
